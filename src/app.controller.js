@@ -1,14 +1,16 @@
-import express, { json } from "express";
+import express from "express";
 import { userRouter, authRouter } from "./modules/index.js";
 import { connectDB } from "./db/connection.js";
 import { port } from "../config/config.service.js";
+import { resolve } from "node:path";
 
 const bootstrap = async () => {
   const app = express();
 
   await connectDB();
 
-  app.use(json());
+  app.use(express.json());
+  app.use("/uploads", express.static(resolve("./uploads")));
 
   app.use("/user", userRouter);
   app.use("/auth", authRouter);

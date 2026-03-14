@@ -15,7 +15,9 @@ export const authentication = (tokenT = tokenType.Access) => {
         break;
 
       case "Bearer":
-        req.user = await decodeToken(credentials, tokenT);
+        const { user, decoded } = await decodeToken(credentials, tokenT);
+        req.user = user;
+        req.decoded = decoded;
         break;
 
       default:
