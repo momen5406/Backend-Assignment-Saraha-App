@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { login, signup } from "./auth.service.js";
+import { login, sendOTP, signup, verifyAccount } from "./auth.service.js";
 import { generateEncryption, hash } from "../../common/utils/index.js";
 import * as validators from "./auth.validation.js";
 import { validation } from "../../middleware/validation.middleware.js";
@@ -19,6 +19,16 @@ router.post("/signup", validation(validators.signup), async (req, res, next) => 
 router.post("/login", validation(validators.login), async (req, res, next) => {
   const credentials = await login(req.body);
   return res.status(200).json({ message: "Done Login", credentials });
+});
+
+router.patch("/verify-account", async (req, res, next) => {
+  await verifyAccount(req.body);
+  return res.status(200).json({ message: "Email verified Successfully.", success: "done" });
+});
+
+router.post("/resend-otp", async (req, res, next) => {
+  await sendOTP(req.body);
+  return res.status(200).json({ message: "OTP sent Successfully.", success: "done" });
 });
 
 export default router;

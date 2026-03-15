@@ -11,7 +11,7 @@ import {
   USER_REFRESH_TOKEN_SECRET_KEY,
 } from "../../../config/config.service.js";
 import { randomUUID } from "node:crypto";
-import { tokenRepository } from "../../db/models/token.repository.js";
+import { tokenRepository } from "../../db/models/index.js";
 
 export const generateToken = async (payload, secretKey, options = {}) => {
   return jwt.sign(payload, secretKey, options);

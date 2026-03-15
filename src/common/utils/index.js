@@ -4,3 +4,4 @@ export * from "./encryption.utils.js";
 export * from "./token.utils.js";
 export * from "./validation.utils.js";
 export * from "./multer/index.js";
+export * from "./email.utils.js";

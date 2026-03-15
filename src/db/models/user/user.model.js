@@ -1,5 +1,5 @@
 import { model, Schema } from "mongoose";
-import { SYS_GENDER, SYS_PROVIDER, SYS_ROLE } from "../../common/constant/index.js";
+import { SYS_GENDER, SYS_PROVIDER, SYS_ROLE } from "../../../common/constant/index.js";
 
 const userSchema = new Schema(
   {
@@ -28,6 +28,7 @@ const userSchema = new Schema(
     profilePic: String,
     coverProfilePic: [String],
 
+    isEmailVerified: { type: Boolean, default: false },
     confirmEmail: Date,
     changeCredentials: Date,
   },
