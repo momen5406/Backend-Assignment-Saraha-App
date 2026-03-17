@@ -1,4 +1,5 @@
 import express from "express";
+import cors from "cors";
 import { userRouter, authRouter } from "./modules/index.js";
 import { connectDB } from "./db/connection.js";
 import { port } from "../config/config.service.js";
@@ -9,6 +10,7 @@ const bootstrap = async () => {
 
   await connectDB();
 
+  app.use(cors("*"));
   app.use(express.json());
   app.use("/uploads", express.static(resolve("./uploads")));
 

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { login, sendOTP, signup, verifyAccount } from "./auth.service.js";
+import { googleLogin, login, sendOTP, signup, verifyAccount } from "./auth.service.js";
 import { generateEncryption, hash } from "../../common/utils/index.js";
 import * as validators from "./auth.validation.js";
 import { validation } from "../../middleware/validation.middleware.js";
@@ -29,6 +29,13 @@ router.patch("/verify-account", async (req, res, next) => {
 router.post("/resend-otp", async (req, res, next) => {
   await sendOTP(req.body);
   return res.status(200).json({ message: "OTP sent Successfully.", success: "done" });
+});
+
+router.post("/login-with-google", async (req, res, next) => {
+  const { idToken } = req.body;
+
+  const credentials = await googleLogin();
+  return res.status(200).json({ message: "Login Successfully", success: "done", data: credentials });
 });
 
 export default router;

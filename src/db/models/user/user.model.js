@@ -17,7 +17,10 @@ const userSchema = new Schema(
     },
     password: {
       type: String,
-      required: true,
+      required: function () {
+        if (this.provider == SYS_PROVIDER.google) return false;
+        return true;
+      },
     },
     phone: String,
     gender: { type: Number, enum: Object.values(SYS_GENDER), default: SYS_GENDER.male },

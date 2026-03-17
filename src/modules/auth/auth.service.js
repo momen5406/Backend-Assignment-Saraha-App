@@ -1,14 +1,17 @@
+import { OAuth2Client } from "google-auth-library";
 import {
   BadRequestException,
   compare,
   ConflictException,
   createLoginCredentials,
   generateDecryption,
+  generateToken,
   NotFoundException,
   sendEmail,
 } from "../../common/utils/index.js";
 import { otpRepository, userRepository } from "../../db/models/index.js";
 import { checkUserExist } from "../user/user.service.js";
+import { SYS_PROVIDER } from "../../common/constant/provider.constant.js";
 
 export const sendOTP = async (inputs) => {
   const { email } = inputs;
@@ -74,4 +77,31 @@ export const verifyAccount = async (inputs) => {
   await userRepository.update({ email }, { isEmailVerified: true, confirmEmail: Date.now() });
   await otpRepository.deleteOne({ _id: otpDoc._id });
   return true;
+};
+
+async function googleVerifyToken(idToken) {
+  const client = new OAuth2Client("170228716976-s8tq98ac6q3qjikk86cc5mvf9o1qk2r2.apps.googleusercontent.com");
+  const ticket = await client.verifyIdToken({ idToken });
+  return ticket.getPayload();
+}
+
+export const googleLogin = async (idToken) => {
+  const payload = await googleVerifyToken(idToken);
+
+  if (payload.email_verified == false) throw new BadRequestException("Refused email from google");
+
+  const user = await userRepository.findOne({ email: payload.email });
+  if (!user) {
+    const createdUser = await userRepository.create({
+      email: payload.email,
+      profilePic: payload.picture,
+      username: payload.name,
+      isEmailVerified: true,
+      provider: SYS_PROVIDER.google,
+    });
+
+    return generateToken({ sub: createdUser._id, role: createdUser.role, provider: createdUser.provider });
+  }
+
+  return generateToken({ sub: user._id, role: user.role, provider: user.provider });
 };
