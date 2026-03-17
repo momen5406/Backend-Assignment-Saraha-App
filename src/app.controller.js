@@ -4,11 +4,13 @@ import { userRouter, authRouter } from "./modules/index.js";
 import { connectDB } from "./db/connection.js";
 import { port } from "../config/config.service.js";
 import { resolve } from "node:path";
+import { redisConnect } from "./db/redis.connection.js";
 
 const bootstrap = async () => {
   const app = express();
 
   await connectDB();
+  redisConnect();
 
   app.use(cors("*"));
   app.use(express.json());

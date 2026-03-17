@@ -12,16 +12,19 @@ import {
 import { otpRepository, userRepository } from "../../db/models/index.js";
 import { checkUserExist } from "../user/user.service.js";
 import { SYS_PROVIDER } from "../../common/constant/provider.constant.js";
+import { redisClient } from "../../db/redis.connection.js";
 
 export const sendOTP = async (inputs) => {
   const { email } = inputs;
 
-  const otpDoc = await otpRepository.findOne({ email });
+  // const otpDoc = await otpRepository.findOne({ email });
+  const otpDoc = await redisClient.exists(`${email}:otp`);
 
   if (otpDoc) throw new BadRequestException("Cannot send OTP, Your OTP is still valid.");
 
   const otp = Math.floor(100000 + Math.random() * 900000);
-  await otpRepository.create({ email, otp, expiresAt: Date.now() + 5 * 60 * 1000 });
+  // await otpRepository.create({ email, otp, expiresAt: Date.now() + 5 * 60 * 1000 });
+  redisClient.set(`${email}:otp`, otp, { expiration: 1 * 60 * 60 });
   await sendEmail({ to: email, subject: "Verify your account", html: `<p>OTP to verify account: ${otp}</p>` });
 };
 
@@ -36,8 +39,10 @@ export const signup = async (inputs) => {
   // OTP
   await sendOTP({ email });
 
-  const user = await userRepository.create({ username, email, password, phone });
-  return user;
+  // const user = await userRepository.create({ username, email, password, phone });
+  // return user;
+
+  await redisClient.set(email, JSON.stringify(inputs), { expiration: 2 * 24 * 60 * 60 });
 };
 
 export const login = async (inputs) => {
@@ -58,7 +63,8 @@ export const login = async (inputs) => {
 
 export const verifyAccount = async (inputs) => {
   const { email, otp } = inputs;
-  const otpDoc = await otpRepository.findOne({ email });
+  // const otpDoc = await otpRepository.findOne({ email });
+  const otpDoc = await redisClient.get(`${email}:otp`);
 
   if (!otpDoc) throw new BadRequestException("OTP expired!");
 
@@ -74,7 +80,11 @@ export const verifyAccount = async (inputs) => {
     throw new BadRequestException("Invalid OTP!");
   }
 
-  await userRepository.update({ email }, { isEmailVerified: true, confirmEmail: Date.now() });
+  let data = await redisClient.get(email);
+  data = JSON.parse(data);
+  await userRepository.update(data);
+  await redisClient.del(email);
+  await redisClient.del(`${email}:otp`);
   await otpRepository.deleteOne({ _id: otpDoc._id });
   return true;
 };

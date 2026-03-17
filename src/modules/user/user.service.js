@@ -2,6 +2,7 @@ import { LOGOUT } from "../../common/constant/index.js";
 import { ConflictException } from "../../common/utils/error.utils.js";
 import { createLoginCredentials, decodeToken } from "../../common/utils/token.utils.js";
 import { userRepository, tokenRepository } from "../../db/models/index.js";
+import { redisClient } from "../../db/redis.connection.js";
 import { ACCESS_TOKEN_EXPIRES_IN, REFRESH_TOKEN_EXPIRES_IN } from "./../../../config/config.service.js";
 
 export const checkUserExist = async (filter) => {
