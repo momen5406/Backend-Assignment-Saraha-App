@@ -24,7 +24,7 @@ export const sendOTP = async (inputs) => {
 
   const otp = Math.floor(100000 + Math.random() * 900000);
   // await otpRepository.create({ email, otp, expiresAt: Date.now() + 5 * 60 * 1000 });
-  redisClient.set(`${email}:otp`, otp, { expiration: 1 * 60 * 60 });
+  redisClient.set(`${email}:otp`, otp, { EX: 1 * 60 * 60 });
   await sendEmail({ to: email, subject: "Verify your account", html: `<p>OTP to verify account: ${otp}</p>` });
 };
 
@@ -39,10 +39,9 @@ export const signup = async (inputs) => {
   // OTP
   await sendOTP({ email });
 
-  // const user = await userRepository.create({ username, email, password, phone });
-  // return user;
+  const user = await userRepository.create({ username, email, password, phone });
 
-  await redisClient.set(email, JSON.stringify(inputs), { expiration: 2 * 24 * 60 * 60 });
+  await redisClient.set(email, JSON.stringify(inputs), { EX: 2 * 24 * 60 * 60 });
 };
 
 export const login = async (inputs) => {
@@ -65,18 +64,11 @@ export const verifyAccount = async (inputs) => {
   const { email, otp } = inputs;
   // const otpDoc = await otpRepository.findOne({ email });
   const otpDoc = await redisClient.get(`${email}:otp`);
+  console.log(otpDoc);
 
   if (!otpDoc) throw new BadRequestException("OTP expired!");
 
-  if (otpDoc.otp != otp) {
-    otpDoc.attempts += 1;
-
-    if (otpDoc.attempts > 3) {
-      otpRepository.deleteOne({ _id: otpDoc._id });
-      throw new BadRequestException("Too many tries!");
-    }
-
-    await otpDoc.save();
+  if (otpDoc != otp) {
     throw new BadRequestException("Invalid OTP!");
   }
 
